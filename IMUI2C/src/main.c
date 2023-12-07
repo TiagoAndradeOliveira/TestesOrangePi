@@ -56,7 +56,8 @@ int main(void){
 	float Gyro_x,Gyro_y,Gyro_z;
 	float Ax=0, Ay=0, Az=0;
 	float Gx=0, Gy=0, Gz=0;
-	fd = wiringPiI2CSetup(Device_Address);   /*Initializes I2C with device Address*/
+	// fd = wiringPiI2CSetup(Device_Address);   /*Initializes I2C with device Address*/
+	fd = wiringPiI2CSetupInterface("/dev/i2c-5", Device_Address);
 	MPU6050_Init();		                 /* Initializes MPU6050 */
 	
 	while(1)
