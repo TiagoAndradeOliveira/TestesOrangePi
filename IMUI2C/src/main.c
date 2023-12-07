@@ -57,7 +57,12 @@ int main(void){
 	float Ax=0, Ay=0, Az=0;
 	float Gx=0, Gy=0, Gz=0;
 	// fd = wiringPiI2CSetup(Device_Address);   /*Initializes I2C with device Address*/
-	fd = wiringPiI2CSetupInterface("/dev/i2c-5", Device_Address);
+	fd = wiringPiI2CSetupInterface("/dev/i2c-5", Device_Address); 
+	/*
+		IMPORTANTÍSSIMO, É NECESSÁRIO ESPECIFICAR QUE INTERFACE I2-C VAI SER UTILIZAR NA ORANGE, NESSE
+		CASO UTILIZAMOS A INTERFACE 5, PINOS 3,5.
+	*/
+
 	MPU6050_Init();		                 /* Initializes MPU6050 */
 	
 	while(1)
