@@ -1,6 +1,8 @@
 /*
+	THIS CODE WAS TAKEN FROM:
 	MPU6050 Interfacing with Raspberry Pi
 	http://www.electronicwings.com
+	AND ADAPTED TO WORK WITH AN ORANGE PI, IN THE i2c bus 5. (pins 3 and 5)
 */
 
 #include <wiringPi.h>
@@ -8,7 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define Device_Address 0x68	/*Device Address/Identifier for MPU6050*/
+#define Device_Address 0x68	//Device Address/Identifier for MPU6050, when AD0 is connected to ground
 
 #define PWR_MGMT_1   0x6B
 #define SMPLRT_DIV   0x19
@@ -26,10 +28,10 @@ int fd;
 
 
 void MPU6050_Init(){
-	
+	//To better understand this registers, see the MPU6050 registers sheet
 	wiringPiI2CWriteReg8 (fd, SMPLRT_DIV, 0x07);	// Write to sample rate register 
 	wiringPiI2CWriteReg8 (fd, PWR_MGMT_1, 0x01);	// Write to power management register 
-	wiringPiI2CWriteReg8 (fd, CONFIG, 0);		    //  Write to Configuration register 
+	wiringPiI2CWriteReg8 (fd, CONFIG, 0);		    // Write to Configuration register 
 	wiringPiI2CWriteReg8 (fd, GYRO_CONFIG, 24);	    // Write to Gyro Configuration register 
 	wiringPiI2CWriteReg8 (fd, INT_ENABLE, 0x01);	// Write to interrupt enable register 
 } 
