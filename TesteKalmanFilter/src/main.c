@@ -12,6 +12,8 @@
 	Note: if its not possible/too hard to implement real-time graphing in C, try to do 30s tests or something like it
 */
 
+#include "pbPlots.h"
+#include "supportLib.h"
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <stdlib.h>
@@ -34,6 +36,7 @@
 int fd;
 int cont; 	  //Variable that counts how many cycles happened
 #define N 100 //Number of cycles
+#define DelayMiliSeconds 10 //Delay between samples
 
 void PrintString3Acelerations(float Ax[N], float Ay[N], float Az[N]){
 	int i;
@@ -75,6 +78,7 @@ int main(void){
 	float AxAccelString[N];
 	float AyAccelString[N];
 	float AzAccelString[N];
+	float TimeLineInMiliseconds[N];
 	
 	float Acc_x,Acc_y,Acc_z;
 	float Gyro_x,Gyro_y,Gyro_z;
@@ -91,7 +95,7 @@ int main(void){
 	
 	for(cont=0; cont<N; cont++) //It's not a while for the purpose of implementing KalmanFilter
 	{
-		/*Read raw value of Accelerometer and gyroscope from MPU6050*/
+		// Read raw value of Accelerometer and gyroscope from MPU6050
 		Acc_x = read_raw_data(ACCEL_XOUT_H);
 		Acc_y = read_raw_data(ACCEL_YOUT_H);
 		Acc_z = read_raw_data(ACCEL_ZOUT_H);
@@ -100,7 +104,7 @@ int main(void){
 		Gyro_y = read_raw_data(GYRO_YOUT_H);
 		Gyro_z = read_raw_data(GYRO_ZOUT_H);
 		
-		/* Divide raw value by sensitivity scale factor */
+		// Divide raw value by sensitivity scale factor 
 		Ax = Acc_x/16384.0;
 		Ay = Acc_y/16384.0;
 		Az = Acc_z/16384.0;
@@ -117,12 +121,43 @@ int main(void){
 		AxAccelString[cont] = Ax;
 		AyAccelString[cont] = Ay;
 		AzAccelString[cont] = Az;
-		delay(10);
+		TimeLineInMiliseconds[cont] = (DelayMiliSeconds*cont);
+		delay(DelayMiliSeconds);
 		
 	}
+	
 
-	printf("\nString of Values Stored\n");
-	PrintString3Acelerations(AxAccelString,AyAccelString,AzAccelString);
+	
+
+	//printf("\nString of Values Stored\n");
+	//PrintString3Acelerations(AxAccelString,AyAccelString,AzAccelString);
+
+/*
+	NOW IT'S THE PART TO TRY TO DRAWN THE GRAPH
+*/
+
+	_Bool success;
+
+	StartArenaAllocator();
+
+	RGBABitmapImageReference *canvasReference = CreateRGBABitmapImageReference();
+	StringReference *errorMessage = CreateStringReference(L"", 0);
+	success = DrawScatterPlot(canvasReference, 1280, 720, TimeLineInMiliseconds, 100, AxAccelString, 100, errorMessage);
+
+	if(success){
+		size_t length;
+		ByteArray *pngdata = ConvertToPNG(canvasReference->image);
+		WriteToFile(pngdata, "example1.png");
+		DeleteImage(canvasReference->image);
+	}else{
+		fprintf(stderr, "Error: ");
+		for(int i = 0; i < errorMessage->stringLength; i++){
+			fprintf(stderr, "%c", errorMessage->string[i]);
+		}
+		fprintf(stderr, "\n");
+	}
+
+	FreeAllocations();
 
 	return 0;
 }
