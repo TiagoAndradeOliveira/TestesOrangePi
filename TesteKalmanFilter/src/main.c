@@ -5,6 +5,12 @@
 	AND ADAPTED TO WORK WITH AN ORANGE PI, IN THE i2c bus 5. (pins 3 and 5)
 */
 
+/*
+	In this KalmanFilter Test, it is needed to:
+	1 - Plot in real-time the data got from the MPU6050
+	2 - Them compare the old data with an Kalman Filter to see how the graph changes
+	Note: if its not possible/too hard to implement real-time graphing in C, try to do 30s tests or something like it
+*/
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
@@ -26,7 +32,14 @@
 #define GYRO_ZOUT_H  0x47
 
 int fd;
+int cont; 	  //Variable that counts how many cycles happened
+#define N 100 //Number of cycles
 
+void PrintString3Acelerations(float Ax[N], float Ay[N], float Az[N]){
+	int i;
+	for(i=0;i<N;i++){
+		printf("| %.5f | %.5f | %.5f |\n",Ax[i],Ay[i],Az[i]);};
+}
 
 void MPU6050_Init(){
 	//To better understand this registers, see the MPU6050 registers sheet
@@ -54,6 +67,14 @@ void ms_delay(int val){
 int main(void){
 
 	wiringPiSetup();
+
+	//Me trying to make an list of raw AccelValues over time.
+	//float RawAccelString[N] = {};
+	//float RawAccelValue;
+
+	float AxAccelString[N];
+	float AyAccelString[N];
+	float AzAccelString[N];
 	
 	float Acc_x,Acc_y,Acc_z;
 	float Gyro_x,Gyro_y,Gyro_z;
@@ -68,7 +89,7 @@ int main(void){
 
 	MPU6050_Init();		                 // Initializes MPU6050 
 	
-	while(1)
+	for(cont=0; cont<N; cont++) //It's not a while for the purpose of implementing KalmanFilter
 	{
 		/*Read raw value of Accelerometer and gyroscope from MPU6050*/
 		Acc_x = read_raw_data(ACCEL_XOUT_H);
@@ -83,14 +104,25 @@ int main(void){
 		Ax = Acc_x/16384.0;
 		Ay = Acc_y/16384.0;
 		Az = Acc_z/16384.0;
+
+		//RawAccelValue = (((Ax*Ax)+(Ay*Ay)+(Az*Az)));
 		
 		Gx = Gyro_x/131;
 		Gy = Gyro_y/131;
 		Gz = Gyro_z/131;
 		
-		printf("\n Gx=%.3f °/s\tGy=%.3f °/s\tGz=%.3f °/s\tAx=%.3f g\tAy=%.3f g\tAz=%.3f g\n",Gx,Gy,Gz,Ax,Ay,Az);
-		delay(100);
+		//printf("\n Gx=%.3f °/s\tGy=%.3f °/s\tGz=%.3f °/s\tAx=%.3f g\tAy=%.3f g\tAz=%.3f g\n",Gx,Gy,Gz,Ax,Ay,Az);
+		//printf("RawAccelValue = %.5f\n",RawAccelValue);
+		//RawAccelString[cont] = RawAccelValue;
+		AxAccelString[cont] = Ax;
+		AyAccelString[cont] = Ay;
+		AzAccelString[cont] = Az;
+		delay(10);
 		
 	}
+
+	printf("\nString of Values Stored\n");
+	PrintString3Acelerations(AxAccelString,AyAccelString,AzAccelString);
+
 	return 0;
 }
