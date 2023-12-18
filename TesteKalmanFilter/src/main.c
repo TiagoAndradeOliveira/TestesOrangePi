@@ -10,6 +10,10 @@
 	1 - Plot in real-time the data got from the MPU6050
 	2 - Them compare the old data with an Kalman Filter to see how the graph changes
 	Note: if its not possible/too hard to implement real-time graphing in C, try to do 30s tests or something like it
+
+	UNFORTUNELY, the pb plots library only suports graphs that have a bigger difference between values. I tried to shake 
+	the IMU during the tests and it generated a graph every time. I will check if the sensitivity of the graph
+	can be changed
 */
 
 #include "pbPlots.h"
@@ -38,10 +42,44 @@ int cont; 	  //Variable that counts how many cycles happened
 #define N 100 //Number of cycles
 #define DelayMiliSeconds 10 //Delay between samples
 
-void PrintString3Acelerations(float Ax[N], float Ay[N], float Az[N]){
+_Bool PrintGraphic(double xaxis[N], double yaxis[N]){
+
+	_Bool success;
+
+	StartArenaAllocator();
+
+	RGBABitmapImageReference *canvasReference = CreateRGBABitmapImageReference();
+	StringReference *errorMessage = CreateStringReference(L"", 0);
+	success = DrawScatterPlot(canvasReference, 1920, 1080, xaxis, N, yaxis, N, errorMessage);
+
+	if(success){
+		size_t length;
+		ByteArray *pngdata = ConvertToPNG(canvasReference->image);
+		WriteToFile(pngdata, "example1.png");
+		DeleteImage(canvasReference->image);
+	}else{
+		fprintf(stderr, "Error: ");
+		for(int i = 0; i < errorMessage->stringLength; i++){
+			fprintf(stderr, "%c", errorMessage->string[i]);
+		}
+		fprintf(stderr, "\n");
+	}
+
+	FreeAllocations();
+
+	return success ? 0 : 1;
+}
+
+void PrintString3Acelerations(double Ax[N], double Ay[N], double Az[N]){
 	int i;
 	for(i=0;i<N;i++){
 		printf("| %.5f | %.5f | %.5f |\n",Ax[i],Ay[i],Az[i]);};
+}
+void Print1String(double L[N]){
+	int i;
+	for(i=0;i<N;i++){
+		printf("| %.5f |\n",L[i]);
+	};
 }
 
 void MPU6050_Init(){
@@ -75,10 +113,10 @@ int main(void){
 	//float RawAccelString[N] = {};
 	//float RawAccelValue;
 
-	float AxAccelString[N];
-	float AyAccelString[N];
-	float AzAccelString[N];
-	float TimeLineInMiliseconds[N];
+	double AxAccelString[N];
+	double AyAccelString[N];
+	double AzAccelString[N];
+	double TimeLineInMiliseconds[N];
 	
 	float Acc_x,Acc_y,Acc_z;
 	float Gyro_x,Gyro_y,Gyro_z;
@@ -122,42 +160,21 @@ int main(void){
 		AyAccelString[cont] = Ay;
 		AzAccelString[cont] = Az;
 		TimeLineInMiliseconds[cont] = (DelayMiliSeconds*cont);
+		//printf("Time of the sample: %f\n", DelayMiliSeconds*cont);
 		delay(DelayMiliSeconds);
 		
 	}
-	
-
-	
 
 	//printf("\nString of Values Stored\n");
-	//PrintString3Acelerations(AxAccelString,AyAccelString,AzAccelString);
 
-/*
-	NOW IT'S THE PART TO TRY TO DRAWN THE GRAPH
-*/
+	// PrintString3Acelerations(AxAccelString,AyAccelString,AzAccelString);
+	// printf("\nNow printing the TimeLine in ms\n");
+	// Print1String(TimeLineInMiliseconds);
 
-	_Bool success;
+	//NOW IT'S THE PART TO TRY TO DRAWN THE GRAPH
 
-	StartArenaAllocator();
+	PrintGraphic(TimeLineInMiliseconds,AxAccelString);
 
-	RGBABitmapImageReference *canvasReference = CreateRGBABitmapImageReference();
-	StringReference *errorMessage = CreateStringReference(L"", 0);
-	success = DrawScatterPlot(canvasReference, 1280, 720, TimeLineInMiliseconds, 100, AxAccelString, 100, errorMessage);
 
-	if(success){
-		size_t length;
-		ByteArray *pngdata = ConvertToPNG(canvasReference->image);
-		WriteToFile(pngdata, "example1.png");
-		DeleteImage(canvasReference->image);
-	}else{
-		fprintf(stderr, "Error: ");
-		for(int i = 0; i < errorMessage->stringLength; i++){
-			fprintf(stderr, "%c", errorMessage->string[i]);
-		}
-		fprintf(stderr, "\n");
-	}
 
-	FreeAllocations();
-
-	return 0;
 }
