@@ -39,7 +39,7 @@
 
 int fd;
 int cont; 	  //Variable that counts how many cycles happened
-#define N 100 //Number of cycles
+#define N 1500 //Number of cycles
 #define DelayMiliSeconds 10 //Delay between samples
 
 _Bool PrintGraphic(double xaxis[N], double yaxis[N]){
