@@ -26,7 +26,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 compile: clean $(TARGET)
-
+#IMPORTANT - The option in line 22 called '-lm' is essential to the compilation with pbplots
 run:
 	./bin/Teste1
 clean:
